@@ -1,0 +1,72 @@
+name: terraform-aws-account-break-glass
+license: GPL3
+gitlab_repo: guardianproject-ops/terraform-aws-account-break-glass
+
+description: Terraform module for managing an account dedicated to breaking glass
+
+introduction: |-
+  Emergency access processes must be designed for different failure modes that may result in an emergency event impacting access to cloud resources. Under normal circumstances, the Guardian Project's users federate to AWS using a centralized identity provider to manage their workloads.
+
+  However, if the centralized identity provider fails, or the configuration for federation to AWS is modified, the workforce users may not be able to federate into AWS.
+
+  An emergency access process allows authorized administrators to access cloud resources through alternate means, such as an alternate form of federation or direct user access, in order to remediate issues with the federation configuration or the workloads themselves. The emergency access process is utilized until the normal federation mechanism can be restored.
+
+  This module implments the Guardian Project AWS Emergency Access Standard.
+
+  - A dedicated AWS account, separate from all other accounts, must be created solely for the purpose of emergency access.
+  - This account must not be used for any other purpose, that is, no workloads must be placed in this account except those facilitating the Break Glass procedure
+
+  This module is responsible for creating the IAM users, IAM roles, and the monitoring/alerting resources necessary to implement the Standard.
+
+usage: |-
+
+  This module consists of two modules, the main module and the regional module.
+  The main module can be applied once.  Pass in the users you want to have Break Glass access. You must ensure they setup their password and MFA.
+
+  The regional module must be applied against every active region in your AWS Organization. This is **crucial** otherwise the Break Glass user signin alerts will not be sent.
+  Alerting is supported via an email address, or you can pass in other types of subscribers.
+
+
+  **NOTE:** One of your regions **must be**  `us-east-1` so that Event Bridge can capture the [Global Service Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-concepts.html#cloudtrail-concepts-global-service-events)
+
+  ```terraform
+  provider "aws"{} # your main region
+  module "break_glass" {
+    source = "git::https://gitlab.com/guardianproject-ops/terraform-aws-account-break-glass?ref=main"
+    context = module.this.context
+    break_glass_users = {
+      "joe" = {
+        email = "joe@example.com"
+      }
+      "alice" = {
+        email = "alice@example.com"
+      }
+    }
+  }
+
+  module "break_glass_region" {
+    source = "git::https://gitlab.com/guardianproject-ops/terraform-aws-account-break-glass//modules/regional?ref=main"
+    context = module.this.context
+    alert_email_address = "security@example.com"
+  }
+
+  # in some other terraform run
+
+  provider "aws" {
+    region = "us-east-1"
+  }
+
+  module "break_glass_region" {
+    source = "git::https://gitlab.com/guardianproject-ops/terraform-aws-account-break-glass//modules/regional?ref=main"
+    context = module.this.context
+    alert_email_address = "security@example.com"
+  }
+  ```
+
+include:
+  - docs/terraform.md
+
+contributors:
+  - name: "Abel Luck"
+    gitlab: "abelxluck"
+    gravatar: 0f605397e0ead93a68e1be26dc26481a
