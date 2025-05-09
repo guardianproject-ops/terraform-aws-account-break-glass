@@ -133,7 +133,7 @@ resource "aws_cloudwatch_event_rule" "assume_event" {
 resource "aws_cloudwatch_event_target" "assume_target" {
   count     = local.audit_enabled ? 1 : 0
   rule      = aws_cloudwatch_event_rule.assume_event[0].name
-  target_id = "SendToSNS-user-${module.this.id}"
+  target_id = "SendToSNS-${module.this.id}"
   arn       = local.topic_arn
 }
 
@@ -156,6 +156,6 @@ resource "aws_cloudwatch_event_rule" "assume_saml_event" {
 resource "aws_cloudwatch_event_target" "assume_saml_target" {
   count     = local.audit_enabled ? 1 : 0
   rule      = aws_cloudwatch_event_rule.assume_saml_event[0].name
-  target_id = "SendToSNS-saml-user${module.this.id}"
+  target_id = "SendToSNS-${module.this.id}"
   arn       = local.topic_arn
 }
