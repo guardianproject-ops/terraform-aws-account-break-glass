@@ -30,5 +30,7 @@ variable "break_glass_policy_arn" {
   default     = "arn:aws:iam::aws:policy/IAMFullAccess"
   description = <<-EOT
 The ARN of the IAM policy that will be attached to the break glass IAM group inside the break glass account.
+
+This only affects what permissions the break users have inside the break glass account.
 EOT
 }

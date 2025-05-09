@@ -79,14 +79,40 @@ The table below correctly indicates which inputs are required.
 
 
 
-This module consists of two modules, the main module and the regional module.
-The main module can be applied once.  Pass in the users you want to have Break Glass access. You must ensure they setup their password and MFA.
+Prerequisites:
 
-The regional module must be applied against every active region in your AWS Organization. This is **crucial** otherwise the Break Glass user signin alerts will not be sent.
-Alerting is supported via an email address, or you can pass in other types of subscribers.
+  - You have a break glass account provisioned and ready
+  - This account is not used for any other purpose or workload
 
+This module consists of three modules:
 
+1. main module - applied to the break glass account
+2. regional module - applied to every active region in the break glass account
+3. target module - applied to accounts which you want to be able to break glass into
+
+The main module should be applied to the break glass account, it sets up the IAM users and login resources.
+
+The regional module must be applied against every active region in your AWS Organization (You do have an enforced, allowlist of AWS regions right?).
+This is **crucial** otherwise the Break Glass user signin alerts will not be sent.
 **NOTE:** One of your regions **must be**  `us-east-1` so that Event Bridge can capture the [Global Service Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-concepts.html#cloudtrail-concepts-global-service-events)
+Alerting is supported via an email address, or you can pass in other types of subscribers such as webhooks.
+
+The target module should be applied to all accounts which you want to be able to break glass into. Take care to coordinate the role names across this main and target modules, there is an implicit link.
+
+
+### Post Apply Steps
+
+- Onboard the users:
+    - Setup their Password and MFA
+    - Store the credentials securely in an offline environment
+- Create and maintain documentation that answer the questions:
+    - When to declare a break glass emergency?
+    - How to login to the break glass account with the emergency IAM users?
+    - How to assume the break glass role into other accounts to perform emergency remediations?
+    - How to "reset" the system after an emergency has been resolved?
+    - How and when to test all of the above procedures?
+
+
 
 ```terraform
 provider "aws"{} # your main region
@@ -167,7 +193,7 @@ module "break_glass_region" {
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br/>This is for some rare cases where resources want additional configuration of tags<br/>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br/>in the order they appear in the list. New attributes are appended to the<br/>end of the list. The elements of the list are joined by the `delimiter`<br/>and treated as a single ID element. | `list(string)` | `[]` | no |
 | <a name="input_break_glass_group_name"></a> [break\_glass\_group\_name](#input\_break\_glass\_group\_name) | The name of the IAM group that will be created to provide break glass access to the AWS accounts. | `string` | `"BreakGlassAccess"` | no |
-| <a name="input_break_glass_policy_arn"></a> [break\_glass\_policy\_arn](#input\_break\_glass\_policy\_arn) | The ARN of the IAM policy that will be attached to the break glass IAM group inside the break glass account. | `string` | `"arn:aws:iam::aws:policy/IAMFullAccess"` | no |
+| <a name="input_break_glass_policy_arn"></a> [break\_glass\_policy\_arn](#input\_break\_glass\_policy\_arn) | The ARN of the IAM policy that will be attached to the break glass IAM group inside the break glass account.<br/><br/>This only affects what permissions the break users have inside the break glass account. | `string` | `"arn:aws:iam::aws:policy/IAMFullAccess"` | no |
 | <a name="input_break_glass_role_arns"></a> [break\_glass\_role\_arns](#input\_break\_glass\_role\_arns) | The ARN of the IAM role that will be assumed by the break glass group in other accounts.<br/>This allows the break glass users to switch role into the break glass role in other accounts. | `list(string)` | <pre>[<br/>  "arn:aws:iam::*:role/BreakGlassRole"<br/>]</pre> | no |
 | <a name="input_break_glass_users"></a> [break\_glass\_users](#input\_break\_glass\_users) | Map of the users that will be created and added to the break glass IAM group.<br/>The map key is a unique/non-changing identifier for the user, and the value is an object containing configuration variables for the user. | <pre>map(object({<br/>    email = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br/>See description of individual variables for details.<br/>Leave string and numeric variables as `null` to use default value.<br/>Individual variable settings (non-null) override settings in context object,<br/>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br/>  "additional_tag_map": {},<br/>  "attributes": [],<br/>  "delimiter": null,<br/>  "descriptor_formats": {},<br/>  "enabled": true,<br/>  "environment": null,<br/>  "id_length_limit": null,<br/>  "label_key_case": null,<br/>  "label_order": [],<br/>  "label_value_case": null,<br/>  "labels_as_tags": [<br/>    "unset"<br/>  ],<br/>  "name": null,<br/>  "namespace": null,<br/>  "regex_replace_chars": null,<br/>  "stage": null,<br/>  "tags": {},<br/>  "tenant": null<br/>}</pre> | no |

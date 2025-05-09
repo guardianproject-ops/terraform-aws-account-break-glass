@@ -20,14 +20,40 @@ introduction: |-
 
 usage: |-
 
-  This module consists of two modules, the main module and the regional module.
-  The main module can be applied once.  Pass in the users you want to have Break Glass access. You must ensure they setup their password and MFA.
+  Prerequisites:
 
-  The regional module must be applied against every active region in your AWS Organization. This is **crucial** otherwise the Break Glass user signin alerts will not be sent.
-  Alerting is supported via an email address, or you can pass in other types of subscribers.
+    - You have a break glass account provisioned and ready
+    - This account is not used for any other purpose or workload
 
+  This module consists of three modules:
 
+  1. main module - applied to the break glass account
+  2. regional module - applied to every active region in the break glass account
+  3. target module - applied to accounts which you want to be able to break glass into
+
+  The main module should be applied to the break glass account, it sets up the IAM users and login resources.
+
+  The regional module must be applied against every active region in your AWS Organization (You do have an enforced, allowlist of AWS regions right?).
+  This is **crucial** otherwise the Break Glass user signin alerts will not be sent.
   **NOTE:** One of your regions **must be**  `us-east-1` so that Event Bridge can capture the [Global Service Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-concepts.html#cloudtrail-concepts-global-service-events)
+  Alerting is supported via an email address, or you can pass in other types of subscribers such as webhooks.
+
+  The target module should be applied to all accounts which you want to be able to break glass into. Take care to coordinate the role names across this main and target modules, there is an implicit link.
+
+
+  ### Post Apply Steps
+
+  - Onboard the users:
+      - Setup their Password and MFA
+      - Store the credentials securely in an offline environment
+  - Create and maintain documentation that answer the questions:
+      - When to declare a break glass emergency?
+      - How to login to the break glass account with the emergency IAM users?
+      - How to assume the break glass role into other accounts to perform emergency remediations?
+      - How to "reset" the system after an emergency has been resolved?
+      - How and when to test all of the above procedures?
+
+
 
   ```terraform
   provider "aws"{} # your main region
