@@ -133,15 +133,15 @@ resource "aws_cloudwatch_event_rule" "assume_event" {
 resource "aws_cloudwatch_event_target" "assume_target" {
   count     = local.audit_enabled ? 1 : 0
   rule      = aws_cloudwatch_event_rule.assume_event[0].name
-  target_id = "SendToSNS-${module.this.id}"
+  target_id = "SendToSNS-user-${module.this.id}"
   arn       = local.topic_arn
 }
 
 
 resource "aws_cloudwatch_event_rule" "assume_saml_event" {
   count       = local.audit_enabled ? 1 : 0
-  name        = "capture-user-assume-role-${module.this.id}"
-  description = "Capture user assuming roles"
+  name        = "capture-saml-user-assume-role-${module.this.id}"
+  description = "Capture saml user assuming roles"
 
   event_pattern = jsonencode({
     source        = ["aws.sts"]
@@ -156,6 +156,6 @@ resource "aws_cloudwatch_event_rule" "assume_saml_event" {
 resource "aws_cloudwatch_event_target" "assume_saml_target" {
   count     = local.audit_enabled ? 1 : 0
   rule      = aws_cloudwatch_event_rule.assume_saml_event[0].name
-  target_id = "SendToSNS-${module.this.id}"
+  target_id = "SendToSNS-saml-user${module.this.id}"
   arn       = local.topic_arn
 }
